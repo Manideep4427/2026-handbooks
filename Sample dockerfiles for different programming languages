@@ -4,11 +4,25 @@ Got it — you want **realistic Dockerfile scenarios where a developer hands you
 
 Key Difference vs Python/Node
 Python → dependencies installed at container build (pip install).
-
 Node.js → dependencies installed at container build (npm install).
-
 Java → dependencies bundled into JAR before container build.
 
+
+Why Node.js copies source in the build stage
+Node.js apps often need the source code during dependency installation.
+Example: Some npm packages run post‑install scripts that reference your source (e.g., build steps, transpilation).
+If you copy only package.json and install, then later copy source in runtime, you risk missing those build‑time hooks.
+
+Layer caching efficiency:
+Copying package.json first → install dependencies → then copy source ensures Docker caches the dependency layer.
+But if you want a multi‑stage build, you copy source into the build stage so you can run build tools (Webpack, Babel, TypeScript) and produce a compiled artifact.
+Then in the runtime stage, you copy only the compiled output (e.g., dist/) instead of raw source.
+
+🔹 Why Python copies source in runtime stage
+Python dependencies don’t depend on your source code.
+pip install -r requirements.txt installs packages independently of your app.
+No build step is needed for most Python apps — the source is just interpreted at runtime.
+That’s why you can safely install dependencies in one stage, then copy source later into runtime.
 
 
 ## 🔹 Scenario 1: Python Flask Web App
