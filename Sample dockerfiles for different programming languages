@@ -182,3 +182,47 @@ docker run -p 3000:3000 rails-app
 - Test locally with `docker run -p host:container`.  
 
 ---
+Real Production scenario
+
+Python Flask 
+# Stage 1: Build dependencies
+FROM python:3.11-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local /usr/local
+COPY . .
+RUN adduser --disabled-password --gecos '' appuser
+USER appuser
+EXPOSE 5000
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:5000/ || exit 1
+
+
+
+Node.js 
+# Stage 1: Build dependencies
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+
+# Stage 2: Runtime
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+EXPOSE 3000
+CMD ["node", "server.js"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3000/ || exit 1
+
