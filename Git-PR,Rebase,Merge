@@ -1,0 +1,688 @@
+# Git PR, Merge & Rebase - Interview Notes -https://chatgpt.com/c/6a4f22df-31d4-83e8-8b6c-c20e31ddab39
+
+---
+
+# 1. What is a Pull Request (PR)?
+
+A Pull Request (PR) is a request to merge changes from one branch into another (usually `main`).
+
+Example:
+
+```text
+main
+  │
+  ├───────────────┐
+  │               │
+feature/login     │
+                  │
+        Pull Request
+                  │
+                  ▼
+                main
+```
+
+A PR allows:
+
+* Code Review
+* Automated CI/CD
+* Discussion
+* Approval before merge
+
+It **does not merge code** by itself.
+
+---
+
+# 2. Typical Git Workflow
+
+```bash
+git switch -c feature/login
+
+# Work on code
+
+git add .
+git commit -m "Added login feature"
+
+git push origin feature/login
+
+gh pr create
+```
+
+After review:
+
+```bash
+gh pr merge feature/login
+```
+
+---
+
+# 3. What happens internally during a PR?
+
+Nothing happens to Git history.
+
+A PR is only a GitHub feature.
+
+Actual Git history changes only after:
+
+```bash
+git merge
+```
+
+or GitHub merges the PR.
+
+---
+
+# 4. What is Merge?
+
+Merge combines two branches.
+
+Example:
+
+Initially
+
+```text
+A (main)
+```
+
+Create feature
+
+```text
+A
+ \
+  B
+```
+
+Meanwhile someone commits
+
+```text
+A
+├── B (feature)
+└── C (main)
+```
+
+Now merge
+
+```text
+git merge main
+```
+
+Git creates
+
+```text
+        M
+       / \
+      B   C
+     /
+A
+```
+
+Notice
+
+Git creates a **new commit M**.
+
+---
+
+# 5. Why does Merge create a new commit?
+
+Git **never edits existing commits**.
+
+Existing commits:
+
+```text
+B
+Parent = A
+
+C
+Parent = A
+```
+
+remain unchanged.
+
+Git creates
+
+```text
+M
+
+Parent1 = B
+
+Parent2 = C
+```
+
+Only M knows about both histories.
+
+---
+
+# 6. Why doesn't B know C?
+
+Because commits are immutable.
+
+Once Git creates
+
+```text
+B
+Parent = A
+```
+
+that can never change.
+
+Git never modifies old commits.
+
+Instead it creates a new commit.
+
+---
+
+# 7. Why does Merge Commit have two parents?
+
+Because Git creates it after seeing
+
+Current Branch
+
+```text
+B
+```
+
+Branch being merged
+
+```text
+C
+```
+
+Git writes
+
+```text
+Merge Commit M
+
+Parent1 = B
+
+Parent2 = C
+```
+
+B still has
+
+```text
+Parent = A
+```
+
+C still has
+
+```text
+Parent = A
+```
+
+---
+
+# 8. What is Rebase?
+
+Rebase means
+
+> Replay my commits on top of another branch.
+
+Suppose
+
+```text
+A
+ \
+  B
+```
+
+Meanwhile
+
+```text
+A──C
+```
+
+Now
+
+```bash
+git rebase main
+```
+
+Result
+
+```text
+A──C──B'
+```
+
+Notice
+
+B becomes
+
+```text
+B'
+```
+
+A brand new commit.
+
+---
+
+# 9. Why B becomes B'?
+
+Original B says
+
+```text
+Parent = A
+```
+
+After rebase
+
+Git wants
+
+```text
+Parent = C
+```
+
+Git cannot edit B.
+
+So it creates
+
+```text
+B'
+```
+
+which has
+
+```text
+Parent = C
+```
+
+Different parent
+
+↓
+
+Different SHA
+
+↓
+
+Different commit
+
+---
+
+# 10. Merge vs Rebase
+
+### Merge
+
+```text
+A
+├──B
+└──C
+
+↓
+
+        M
+       / \
+      B   C
+```
+
+History preserved.
+
+Creates Merge Commit.
+
+---
+
+### Rebase
+
+```text
+A
+├──B
+└──C
+
+↓
+
+A──C──B'
+```
+
+History rewritten.
+
+No Merge Commit.
+
+Linear history.
+
+---
+
+# 11. Why Companies Prefer Rebase
+
+Without rebase
+
+```text
+Merge Login
+
+Merge Dashboard
+
+Merge Payment
+
+Merge Notification
+
+Merge Search
+```
+
+History becomes
+
+```text
+      M
+     / \
+----/---\------
+
+     M
+    / \
+---/---\-------
+```
+
+Many unnecessary merge commits.
+
+---
+
+With rebase
+
+```text
+Login
+
+Dashboard
+
+Payment
+
+Notification
+
+Search
+```
+
+History is straight.
+
+Easy to read.
+
+Easy to debug.
+
+---
+
+# 12. Why Push Fails After Rebase?
+
+Before
+
+```text
+Remote
+
+B
+```
+
+Local after rebase
+
+```text
+B'
+```
+
+Git thinks
+
+```text
+These are different commits.
+```
+
+Normal push
+
+```bash
+git push
+```
+
+fails
+
+Need
+
+```bash
+git push --force-with-lease
+```
+
+because history changed.
+
+---
+
+# 13. Why --force-with-lease instead of --force?
+
+`--force`
+
+```text
+Overwrite everything.
+```
+
+Dangerous.
+
+May delete teammates' work.
+
+---
+
+`--force-with-lease`
+
+```text
+Overwrite only if remote hasn't changed since I last fetched.
+```
+
+Much safer.
+
+Preferred in teams.
+
+---
+
+# 14. Why do we Fetch before Rebase?
+
+```bash
+git fetch origin
+```
+
+downloads latest commits.
+
+Suppose
+
+Remote
+
+```text
+A──C
+```
+
+Local
+
+```text
+A──B
+```
+
+Without fetch
+
+Git doesn't know C exists.
+
+Fetch updates your local view of the remote so rebase has the latest commits to replay onto.
+
+---
+
+# 15. Typical Rebase Workflow
+
+```bash
+git fetch origin
+
+git rebase origin/main
+```
+
+If conflict
+
+Resolve
+
+```bash
+git add .
+```
+
+Continue
+
+```bash
+git rebase --continue
+```
+
+Push
+
+```bash
+git push --force-with-lease
+```
+
+---
+
+# 16. Can I create a PR without Rebasing?
+
+Yes.
+
+GitHub allows it.
+
+Example
+
+```text
+main
+
+A──C
+
+feature
+
+A──B
+```
+
+PR still works.
+
+---
+
+Many companies, however, require rebasing because:
+
+* Latest main included
+* Fewer merge conflicts later
+* CI runs against latest code
+* Cleaner history
+
+---
+
+# 17. When is Rebase Needed?
+
+Scenario
+
+```text
+Day 1
+
+A
+```
+
+Create feature
+
+```text
+A──B
+```
+
+Meanwhile
+
+Someone merges
+
+```text
+A──C
+```
+
+Now
+
+```text
+A──C (main)
+
+A──B (feature)
+```
+
+Best practice
+
+```bash
+git fetch origin
+
+git rebase origin/main
+```
+
+Result
+
+```text
+A──C──B'
+```
+
+---
+
+# 18. Merge vs Rebase (Interview Answer)
+
+**Merge**
+
+* Preserves actual branch history.
+* Creates a merge commit.
+* Does not modify existing commits.
+* Suitable when you want to retain the exact development history.
+
+**Rebase**
+
+* Replays your commits on top of the latest branch.
+* Rewrites commit history (new commit SHAs).
+* Produces a clean, linear history.
+* Commonly used before opening or updating a Pull Request.
+
+---
+
+# 19. One-Line Definitions
+
+**Pull Request**
+
+> A request to merge one branch into another after review and CI checks.
+
+**Merge**
+
+> Combines two branches by creating a new merge commit that has both branch tips as parents.
+
+**Rebase**
+
+> Replays commits onto another base commit, creating new commits with updated parent relationships.
+
+**Merge Commit**
+
+> A special commit with two (or more) parents that connects multiple branch histories.
+
+**Commit**
+
+> A snapshot of the project along with metadata, including references to its parent commit(s).
+
+**Commit Hash (SHA)**
+
+> A unique identifier for a commit, calculated from its contents and metadata. Changing a commit's parent or content produces a new SHA.
+
+---
+
+# 20. The Most Important Concept
+
+```
+Merge
+------
+Keeps history exactly as it happened.
+
+Creates ONE new merge commit.
+
+Old commits never change.
+
+----------------------------------
+
+Rebase
+-------
+Does NOT connect histories.
+
+Copies your commits.
+
+Places the copies on top of the latest branch.
+
+Old commits remain untouched.
+
+New commits get new SHAs.
+
+----------------------------------
+
+Git Rule
+--------
+Commits are IMMUTABLE.
+
+Git NEVER edits an existing commit.
+
+It either:
+
+1. Creates a Merge Commit
+
+OR
+
+2. Creates New Replayed Commits (during rebase)
+```
+
+If you understand **immutability** and **parent relationships**, you'll understand almost every Git history operation. These are also the concepts interviewers often probe when discussing PRs, merges, and rebases.
