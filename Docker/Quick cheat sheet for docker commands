@@ -1,0 +1,289 @@
+Here's a concise Docker command cheat sheet you can quickly refer to during interviews or while working.
+
+---
+
+# Images
+
+```bash
+# List images
+docker images
+
+# Show image history (layers)
+docker history <image>
+https://chatgpt.com/s/t_6a5622b1cc7c8191a91c4d38b970005e
+
+# Inspect image metadata
+docker image inspect <image>
+
+# Pull image
+docker pull <image>:<tag>
+
+# Build image
+docker build -t <image>:<tag> .
+
+# Tag image
+docker tag <image>:<tag> <new-image>:<tag>
+
+# Push image
+docker push <image>:<tag>
+
+# Remove image
+docker rmi <image>
+
+# Remove dangling images
+docker image prune
+
+# Remove all unused images
+docker image prune -a
+```
+
+---
+
+# Containers
+
+```bash
+# List running containers
+docker ps
+
+# List all containers
+docker ps -a
+
+# Create & run container
+docker run <image>
+
+# Run in detached mode
+docker run -d <image>
+
+# Run interactively
+docker run -it <image>
+
+# Run shell instead of CMD
+docker run -it <image> sh
+
+# Port mapping
+docker run -d -p 3000:3000 <image>
+
+# Name a container
+docker run --name mycontainer <image>
+
+# Stop container
+docker stop <container>
+
+# Start stopped container
+docker start <container>
+
+# Restart container
+docker restart <container>
+
+# Kill container
+docker kill <container>
+
+# Remove container
+docker rm <container>
+
+# Remove all stopped containers
+docker container prune
+```
+
+---
+
+# Container Inspection
+
+```bash
+# Inspect container
+docker inspect <container>
+
+# View logs
+docker logs <container>
+
+# Follow logs
+docker logs -f <container>
+
+# Execute command inside running container
+docker exec -it <container> sh
+
+# View running processes
+docker top <container>
+
+# View resource usage
+docker stats
+
+# Copy file from container
+docker cp <container>:/path/file .
+
+# Copy file into container
+docker cp file.txt <container>:/path
+```
+
+---
+
+# Volumes
+
+```bash
+# List volumes
+docker volume ls
+
+# Create volume
+docker volume create <volume-name>
+
+# Inspect volume
+docker volume inspect <volume-name>
+
+# Remove volume
+docker volume rm <volume-name>
+
+# Remove unused volumes
+docker volume prune
+
+# Show which volumes a container uses
+docker inspect <container>
+
+# Browse volume contents
+docker run --rm -it -v <volume-name>:/data alpine sh
+
+# Inside temporary container
+cd /data
+ls -la
+cat <file>
+```
+
+---
+
+# Networks
+
+```bash
+# List networks
+docker network ls
+
+# Inspect network
+docker network inspect <network>
+
+# Create network
+docker network create <network>
+
+# Connect container to network
+docker network connect <network> <container>
+
+# Disconnect container
+docker network disconnect <network> <container>
+
+# Remove network
+docker network rm <network>
+
+# Remove unused networks
+docker network prune
+```
+
+---
+
+# System Cleanup
+
+```bash
+# Show Docker disk usage
+docker system df
+
+# Detailed disk usage
+docker system df -v
+
+# Remove stopped containers, dangling images, build cache
+docker system prune
+
+# Also remove unused images
+docker system prune -a
+
+# Also remove unused volumes
+docker system prune -a --volumes
+```
+
+---
+
+# Dockerfile
+
+```bash
+# Build image
+docker build -t myapp:latest .
+
+# Build without cache
+docker build --no-cache -t myapp .
+
+# View image layers
+docker history myapp
+
+# Inspect image
+docker image inspect myapp
+```
+
+---
+
+# Common Troubleshooting
+
+```bash
+# Enter running container
+docker exec -it <container> sh
+
+# Running processes
+ps aux
+
+# Current directory
+pwd
+
+# List files
+ls -la
+
+# Environment variables
+env
+printenv
+
+# Disk usage
+df -h
+
+# Memory usage
+free -m
+
+# Test application
+wget http://localhost:3000
+curl http://localhost:3000
+
+# Check mounted files
+mount
+
+# View application logs
+docker logs <container>
+```
+
+---
+
+# Save & Share Images
+
+```bash
+# Save image to tar
+docker save -o image.tar <image>
+
+# Load image
+docker load -i image.tar
+
+# Export container filesystem
+docker export <container> > container.tar
+
+# Import filesystem as image
+docker import container.tar newimage:latest
+```
+
+---
+
+# One-Line Interview Summary
+
+* **Image** → Read-only template used to create containers.
+* **Container** → Running instance of an image.
+* **Volume** → Persistent storage managed by Docker.
+* **Network** → Communication layer between containers.
+* **`docker exec`** → Run commands inside an existing container.
+* **`docker inspect`** → View detailed JSON metadata for Docker objects.
+* **`docker logs`** → View container output.
+* **`docker history`** → View image layers.
+* **`docker system df`** → Check Docker disk usage.
+* **`docker system prune`** → Clean unused Docker resources.
+* **`docker image prune`** → Remove unused images.
+* **`docker container prune`** → Remove stopped containers.
+* **`docker volume prune`** → Remove unused volumes.
+* **`docker network prune`** → Remove unused networks.
